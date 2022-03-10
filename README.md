@@ -10,6 +10,9 @@ underscore and then the numerator/denominator, without spaces.
 For example, three and one quarter can be represented as 3\_1/4.
 - Improper fractions and whole numbers without fractions will also be accepted 
 as valid inputs.
+- Whole numbers and fractions are handled, decimal places are ignored and 
+dropped.
+- Illegal operators are ignored and dropped.
  
 Example run:
 
