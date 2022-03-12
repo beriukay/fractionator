@@ -52,6 +52,10 @@ class Number:
                 self.whole += 1
                 newNum = self.fraction[1] - self.fraction[0]
                 self.fraction = (newNum, self.fraction[1])
+    
+    @staticmethod
+    def isNumber(number):
+        return bool(re.match("^[0-9_/-]*$", number))
 
 
 def evaluate(tokenList):
@@ -63,8 +67,6 @@ def evaluate(tokenList):
 
 def main():
     print("Fractionator (press q to quit)")
-    operators = {' + ':" add ", ' - ':" add ", ' * ':" mul ", " / ": " mul ", '(':"left", 
-            ')':"right"}
     while True:
         request = input("? ")
         if request in ['q', "quit"]:
@@ -72,21 +74,22 @@ def main():
         # Fall through if any zero division is detected.
         elif "/0" in request or "/ 0" in request:
             print("Sorry, I am not equipped to divide by zero.")
-        elif re.match("[^0-9_+\-*/]", request):
-            print("Sorry, I do not recognize some of the characters provided")
         else:
-            for operator in operators:
-                request = request.replace(operator, operators[operator])
-
+            sanitized = re.sub("[a-zA-Z!@#$%^&.,]",'', request)
             tokens = request.split(' ')
+            while '' in tokens:
+                tokens.remove('')
+
             evaluate(tokens)
 
 
 #main()
-testNums = ['1', '1/2', '1_1/2', '3_3/4', '5_0/5', '_2/3', '3_150/9', '-20/-4',
+goodNums = ['1', '1/2', '1_1/2', '3_3/4', '5_0/5', '_2/3', '3_150/9', '-20/-4',
         '20', '2/3', '_2/3', '29_3/4', '1_45/3', '56_0/3', '1_-1/-1', '0', 
         '0_2/16', '-5_13/7']
-numbers = [Number(i) for i in testNums]
+numbers = [Number(i) for i in goodNums]
+
+badNums = ['', 'a', '123.0', '12,3', 'helpme']
 
 test_cases = [
         ("1/2 * 3_3/4", "1_7/8"), 
