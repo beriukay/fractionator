@@ -1,30 +1,30 @@
 # Number takes a string input of integer, mixed, or fractional values. It does
 # not sanitize inputs. The class handles all mathematical operations on its data.
+# Class constructor is overloaded to take valid string or processed Number input.
 class Number:
-    def __init__(self, number, numerator=None, denominator=None, sign=None):
+    def __init__(self, number, denominator=None):
         if type(number) is str:
-            whole, num, denom = self.splitValue(number)
-            self.sign = self.handleSign(whole, num, denom)
-            whole, num, denom = abs(whole), abs(num), abs(denom)
-            self.whole, self.num, self.den = self.reduce(whole, num, denom)
-            if self.whole < 0:
-                self.whole, self.num = self.balanceNegatives()
+            whole, num, den = self.splitValue(number)
+            whole, num, self.den = int(whole), int(num), int(den)
+            self.num = self.makeImproper(whole, num, den)
         else:
-            self.whole = number
-            self. num = numerator
+            self. num = number
             self.den = denominator
-            self.sign = sign
 
-    def reduce(self, whole, num, denom):
-        gcd = self.getGCD(num, denom)
-        num = int(num / gcd)
-        denom = int(denom / gcd)
-        if num >= denom:                    # Check for improper fraction
-            whole += int(num / denom)       # Carry over whole values
-            num = num % denom
-        return whole, num, denom
+    def splitValue(self, numStr):
+        whole, num, den = 0, 0, 1
+        if '_' in numStr:                   # Split whole part from fractional
+            wholePart, numStr = numStr.split('_')
+            if wholePart:
+                whole = int(wholePart)
+        if '/' in numStr:                   # Split fraction into components
+            num, den = numStr.split('/')
+            num, den = int(num), int(den)
+        else:                               # Handle solo integers
+            whole = int(numStr)
+        return whole, num, den
 
-    def getGCD(self, first, second):
+    def getGCD(self, first, second):        # GCD is used to reduce fractions
         if (first < second):
             return self.getGCD(second, first)
         if first == 0:
@@ -33,59 +33,42 @@ class Number:
             return first
         return self.getGCD(second, first % second)
 
-    def splitValue(self, numStr):
-        whole, num, denom = 0, 0, 1
-        if '_' in numStr:                   # Split whole part from fractional
-            wholePart, numStr = numStr.split('_')
-            if wholePart:
-                whole = int(wholePart)
-        if '/' in numStr:                   # Split fraction into components
-            num, denom = numStr.split('/')
-            num, denom = int(num), int(denom)
-        else:                               # Handle solo integers
-            whole = int(numStr)
-        return whole, num, denom
-    
-    # Multiply values together to set the +/- parity, then scale to range [-1,1]
-    def handleSign(self, a, b, c):
-        return 2 * int(a * b * c >= 0) - 1
+    # Improper fractions are either a + b/c or -a - b/c. In other words,
+    # the numerator and whole components always have the same sign.
+    def makeImproper(self, whole, num, den):
+        return (whole * den) + num if whole >=0 else (whole * den) - num
 
-    def balanceNegatives(self, number=None):
-        if number is None:
-            number = self
-        whole = number.whole
-        num, den = number.num, number.den
-        if num > 0:
-            whole += 1
-            num = den - self.num
-        return whole, num
-    
-    def __add__(self, other):
-        whole, num, den, sign = 0, 0, 0, self.sign
-        if self.sign == other.sign:
-            top = self.num * other.den + other.num * self.den
-            whole, num, den = self.reduce(self.whole + other.whole, top, self.den * other.den)
-        else:
-            improperSelf = self.whole * self.den + self.num 
-            improperOther =  other.whole * other.den + other.num
-            top = improperSelf * other.den - improperOther * self.den
-            print("top: ", top)
-            whole, num, den = self.reduce(self.whole - other.whole, top, self.den * other.den)
-            print(whole, num, den)
-            result = Number(whole, num, den, sign)
-            result.whole, result.num = result.balanceNegatives()
-        return result
+    def makeMixed(self, num=None, den=None):
+        if not num or not den:
+            num, den = self.num, self.den
+        whole = 0
+        gcd = self.getGCD(abs(num), abs(den))
+        num, den = int(num / gcd), int(den / gcd)
+        if abs(num) >= abs(den):            # Reduce and carry
+            whole = int(num / den)
+            num = abs(num) % den
+        return whole, num, den
+
+    def __add__(self, other):               # a/b + c/d = (ad + cb)/ad
+        newNum = self.num * other.den + other.num * self.den
+        return Number(newNum, self.den * other.den)
 
     def __sub__(self, other):
-        negOther = Number(other.whole, other.num, other.den, -1 * other.sign)
-        return self + negOther
+        return self +  Number(-1 * other.num, other.den)
+
+    def __mul__(self, other):               # a/b * c/d = ac / bd
+        return Number(self.num * other.num, self.den * other.den)
+
+    def __truediv__(self, other):
+        return self * Number(other.den, other.num)
 
     def __repr__(self):
         repStr = ''
-        if self.whole != 0:
-            repStr += str(self.whole) + '_'
-        if self.num != 0:
-            repStr += str(self.num) + '/' + str(self.den)
-        if self.whole == 0 and self.num == 0:
+        if self.num == 0:
             repStr = "0"
+        else:
+            whole, num, den = self.makeMixed()
+            if whole != 0:
+                repStr += str(whole) + "_"
+            repStr += str(num) + '/' + str(den)
         return repStr
