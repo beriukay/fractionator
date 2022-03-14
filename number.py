@@ -5,11 +5,11 @@ class Number:
     def __init__(self, number, denominator=None):
         if type(number) is str:
             whole, num, den = self.splitValue(number)
-            whole, num, self.den = int(whole), int(num), int(den)
-            self.num = self.makeImproper(whole, num, den)
+            whole, num, den = int(whole), int(num), int(den)
+            num = self.makeImproper(whole, num, den)
+            self.num, self.den = self.reduce(num, den)
         else:
-            self. num = number
-            self.den = denominator
+            self. num, self.den = self.reduce(number, denominator)
 
     def splitValue(self, numStr):
         whole, num, den = 0, 0, 1
@@ -38,6 +38,11 @@ class Number:
     def makeImproper(self, whole, num, den):
         return (whole * den) + num if whole >=0 else (whole * den) - num
 
+    def reduce(self, num, den):
+        gcd = self.getGCD(abs(num), abs(den))
+        num, den = int(num / gcd), int(den / gcd)
+        return num, den
+
     def makeMixed(self, num=None, den=None):
         if not num or not den:
             num, den = self.num, self.den
@@ -53,14 +58,17 @@ class Number:
         newNum = self.num * other.den + other.num * self.den
         return Number(newNum, self.den * other.den)
 
-    def __sub__(self, other):
+    def __sub__(self, other):               # a/b - c/d = (ad -cb)/ad
         return self +  Number(-1 * other.num, other.den)
 
     def __mul__(self, other):               # a/b * c/d = ac / bd
         return Number(self.num * other.num, self.den * other.den)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other):           # a/b / c/d = a/b * d/c
         return self * Number(other.den, other.num)
+
+    def __eq__(self, other):
+        return (self.num == other.num) and (self.den == other.den)
 
     def __repr__(self):
         repStr = ''
@@ -69,6 +77,9 @@ class Number:
         else:
             whole, num, den = self.makeMixed()
             if whole != 0:
-                repStr += str(whole) + "_"
-            repStr += str(num) + '/' + str(den)
+                repStr += str(whole)
+            if whole !=0 and num != 0:
+                repStr += '_'
+            if num != 0:
+                repStr += str(num) + '/' + str(den)
         return repStr

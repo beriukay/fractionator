@@ -13,6 +13,7 @@ as valid inputs.
 - Whole numbers and fractions are handled, decimal places are ignored and 
 dropped.
 - Illegal operators are ignored and dropped.
+- Only handles Operand Operator Operand inputs (but can easily be extended)
  
 Example run:
 

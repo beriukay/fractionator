@@ -12,14 +12,55 @@ def isNumber(number):
     return hasValidCharacters and hasDigits and hasValidFraction
 
 
-def evaluate(tokenList):
-    print(tokenList)
-    result = Number("0") 
-    for token in tokenList:
-        if isNum(token):
-            number = Number(token)
-        pass
-    return
+def tokenGenerator(iterable):
+    iterator = iter(iterable)
+    prev = None
+    current = next(iterator) 
+    for post in iterator:
+        yield(prev, current, post)
+        prev = current
+        current = post
+    yield(prev, current, None)
+
+
+def tokenizeInput(text):
+    sanitized = re.sub("[a-zA-Z!@#$%^&.,]",'', text)
+    tokens = text.split(' ')
+    tokens = [token for token in tokens if token != '']
+    ignoreList = []
+    for token in tokens:                # Ignore tokens until first digit
+        if not isNumber(token):
+            ignoreList.append(token)
+        else:
+            break
+    for ignore in ignoreList:
+        tokens.remove(ignore)
+    if len(tokens) < 3:             # Too few inputs, return numbers in text
+        print('=',''.join([num for num in tokens if isNumber(num)]))
+        return None
+    return tokens
+
+
+# All valid inputs alternate operands and operators, starting with operands.
+def evaluate(tokens):
+    ops = "*/+-"
+    tokenIter = tokenGenerator(tokens)
+    for prev, this, post  in tokenIter:
+        for op in ops:                  # Set order of operations
+            if this == op and op == '*':
+                accumulator = Number(prev) * Number(post)
+            elif this == op and op == '/':
+                accumulator = Number(prev) / Number(post)
+            elif this == op and op == '+':
+                accumulator = Number(prev) + Number(post)
+            elif this == op and op == '-':
+                accumulator = Number(prev) - Number(post)
+            else:
+                continue
+            tokens.remove(prev)
+            tokens.remove(this)
+            post = accumulator
+    return accumulator
 
 
 def main():
@@ -31,43 +72,11 @@ def main():
         elif "/0" in request or "/ 0" in request:   
             print("Sorry, I am not equipped to divide by zero.")
             continue
-        sanitized = re.sub("[a-zA-Z!@#$%^&.,]",'', request)
-        tokens = request.split(' ')
-        tokens = [token for token in tokens if token != '']
-        ignoreList = []
-        for token in tokens:
-            if not isNumber(token):
-                ignoreList.append(token)
-            else:
-                break
-        for ignore in ignoreList:
-            tokens.remove(ignore)
-
-        if len(tokens) < 3:             # if not enough to form an expression
-            print('=',''.join([num for num in tokens if isNumber(num)]))
+        tokens = tokenizeInput(request)
+        if tokens == None:
+            print()
             continue
-        evaluate(tokens)
-
-#main()
-good = ['1', '1/2', '1_1/2', '3_3/4', '5_0/5', '_2/3', '3_150/9', '-20/-4',
-        '20', '2/3', '_2/3', '29_3/4', '1_45/3', '56_0/3', '1_-1/-1', '0', 
-        '0_2/16', '-5_13/7']
-numbers = [Number(i) for i in good]
-
-
-bad = ['', 'a', '123.0', '12,3', 'helpme', '-_/-', '1_/2', '_/3', '-_-/']
-#for i in bad:
-#    print(i, isNumber(i))
-
-
-
-test_cases = [
-        ("1/2 * 3_3/4", "1_7/8"), 
-        ("2_3/8 + 9/8", "3_1/2"),
-        ("1", "1"),
-        ("1/0", "div zero error"),
-        ("-1 - -1/1", "0"),
-        ("1 + 1/-1", "0"),
-        ]
-
-# Unhandled kinds of inputs: 2/3_, /3, /; Note: x/0 is handled in the main loop.
+        result = evaluate(tokens)
+        print("=", result)
+        print()
+main()
