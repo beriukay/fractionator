@@ -14,6 +14,9 @@ as valid inputs.
 dropped.
 - Illegal operators are ignored and dropped.
 - Only handles Operand Operator Operand inputs (but can easily be extended)
+
+Note: to run unittests, simply call:
+$ python3 test.py
  
 Example run:
 
@@ -34,4 +37,5 @@ Example run:
 
 ? 1 + 1/-1
 = 0
+
 
