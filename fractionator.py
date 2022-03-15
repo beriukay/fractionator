@@ -1,3 +1,5 @@
+#!/bin/python3
+import argparse
 import re
 from number import Number
 
@@ -79,4 +81,5 @@ def main():
         result = evaluate(tokens)
         print("=", result)
         print()
-main()
+if __name__ == "__main__":
+    main()
