@@ -7,6 +7,8 @@ class Number:
             whole, num, den = self.splitValue(number)
             whole, num, den = int(whole), int(num), int(den)
             num = self.makeImproper(whole, num, den)
+            if num < 0 and den < 0:
+                num, den = -1 * num, -1 * den
             self.num, self.den = self.reduce(num, den)
         else:
             self. num, self.den = self.reduce(number, denominator)
